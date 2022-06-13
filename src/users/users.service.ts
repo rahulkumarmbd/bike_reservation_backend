@@ -47,10 +47,6 @@ export class UserService {
     return { users: users, pages: Math.ceil(count / limit) };
   }
 
-  getHello(): string {
-    return 'Hello Rahul';
-  }
-
   async createUser(user: User): Promise<responseUser> {
     const hashPassword = bcrypt.hashSync(user.password, 8);
     const newUser = this.usersRepository.create({

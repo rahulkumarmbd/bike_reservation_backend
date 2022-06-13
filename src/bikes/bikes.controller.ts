@@ -13,7 +13,14 @@ import {
 import { JoiValidationPipe } from 'src/joi-validation.pipes';
 import { BikePaginate, BikeService, filterBike } from './bikes.service';
 import { Bike } from './bike.entity';
-import { bikePatchSchema, bikeSchema } from './bike.schema';
+import {
+  bikePatchSchema,
+  bikeSchema,
+  filterSchema,
+  idSchema,
+  limitAndPageSchema,
+  nonReservedSchema,
+} from './bike.schema';
 import { RoleGuard } from 'src/AuthGuard/RoleGuard';
 import { AuthGuard } from 'src/AuthGuard/AuthGuard';
 import { Role } from 'src/userroles';
@@ -36,6 +43,7 @@ export class BikeController {
   @RoleGuard(Role.Manager)
   @UseGuards(AuthGuard)
   @Get()
+  @UsePipes(new JoiValidationPipe(limitAndPageSchema))
   reservedBikes(
     @Query() { page, limit }: { page: string; limit: string },
   ): Promise<BikePaginate> {
@@ -45,6 +53,7 @@ export class BikeController {
   @RoleGuard(Role.Manager, Role.Regular)
   @UseGuards(AuthGuard)
   @Get('filter')
+  @UsePipes(new JoiValidationPipe(filterSchema))
   filter(
     @Query()
     query: filterBike,
@@ -55,6 +64,7 @@ export class BikeController {
   @RoleGuard(Role.Regular, Role.Manager)
   @UseGuards(AuthGuard)
   @Get('nonreserved')
+  @UsePipes(new JoiValidationPipe(nonReservedSchema))
   nonreserved(
     @Query()
     query: NonReserved,
@@ -65,6 +75,7 @@ export class BikeController {
   @RoleGuard(Role.Regular)
   @UseGuards(AuthGuard)
   @Get('available')
+  @UsePipes(new JoiValidationPipe(limitAndPageSchema))
   unreserved(
     @Query() { page, limit }: { page: string; limit: string },
   ): Promise<BikePaginate> {
@@ -74,14 +85,16 @@ export class BikeController {
   @RoleGuard(Role.Regular)
   @UseGuards(AuthGuard)
   @Get('/:id')
-  AvialableBike(@Param('id') id: number): Promise<Bike> {
+  @UsePipes(new JoiValidationPipe(idSchema))
+  AvialableBike(@Param() { id }: { id: number }): Promise<Bike> {
     return this.bikeService.bike(id);
   }
 
   @RoleGuard(Role.Manager)
   @UseGuards(AuthGuard)
   @Get('/:id/manager')
-  getBike(@Param('id') id: number): Promise<Bike> {
+  @UsePipes(new JoiValidationPipe(idSchema))
+  getBike(@Param() { id }: { id: number }): Promise<Bike> {
     return this.bikeService.getOneById(id);
   }
 
@@ -104,6 +117,7 @@ export class BikeController {
   @RoleGuard(Role.Manager)
   @UseGuards(AuthGuard)
   @Delete('/:id')
+  @UsePipes(new JoiValidationPipe(idSchema))
   async deleteUser(@Param() id: number): Promise<Bike> {
     return this.bikeService.deleteBike(id);
   }

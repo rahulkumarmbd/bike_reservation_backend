@@ -15,7 +15,6 @@ import { User } from './user.entity';
 import { JoiValidationPipe } from 'src/joi-validation.pipes';
 import { userLoginSchema, userPatchSchema, userSchema } from './user.schema';
 import { AuthGuard } from 'src/AuthGuard/AuthGuard';
-import { Auth, IAuth } from 'src/utils/auth.decorator';
 import { RoleGuard } from 'src/AuthGuard/RoleGuard';
 import { Role } from 'src/userroles';
 
@@ -39,14 +38,6 @@ export class UserController {
     @Query() { page, limit }: { page: string; limit: string },
   ): Promise<usersPaginate> {
     return this.userService.getAll(+page, +limit);
-  }
-
-  @RoleGuard(Role.Regular)
-  @UseGuards(AuthGuard)
-  @Get('/helloWorld')
-  get(@Auth() Auth: IAuth) {
-    console.log('Auth', Auth.user.email);
-    return this.userService.getHello();
   }
 
   @Post('/register')

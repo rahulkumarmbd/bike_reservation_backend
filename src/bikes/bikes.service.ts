@@ -86,6 +86,10 @@ export class BikeService {
 
   // for manager
   async allBikes(page: number, limit: number): Promise<BikePaginate> {
+    if (page < 1) {
+      throw new HttpException('Bad Request', HttpStatus.BAD_REQUEST);
+    }
+
     const bikes = await this.bikesRepository.find({
       take: limit,
       skip: (page - 1) * limit,

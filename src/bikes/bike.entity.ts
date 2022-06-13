@@ -1,3 +1,4 @@
+import { Comment } from 'src/comments/comment.entity';
 import { ReservedBike } from 'src/reservedBikes/reservedBikes.entity';
 import {
   Column,
@@ -27,8 +28,13 @@ export class Bike {
   @Column()
   available: boolean;
 
-  @OneToMany(() => ReservedBike, (reservedBike) => reservedBike.bikeId, {
+  @OneToMany(() => ReservedBike, (reservedBike) => reservedBike.bike, {
     onDelete: 'CASCADE',
   })
   reservations: ReservedBike[];
+
+  @OneToMany(() => Comment, (comment) => comment.bike, {
+    onDelete: 'CASCADE',
+  })
+  comments: Comment[];
 }

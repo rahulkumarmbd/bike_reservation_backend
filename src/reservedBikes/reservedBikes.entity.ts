@@ -1,10 +1,12 @@
 import { Bike } from 'src/bikes/bike.entity';
+import { Comment } from 'src/comments/comment.entity';
 import { User } from 'src/users/user.entity';
 import {
   Column,
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -14,10 +16,10 @@ export class ReservedBike {
   id: number;
 
   @Column()
-  startTime: string;
+  bookingDate: Date;
 
   @Column()
-  endTime: string;
+  returnDate: Date;
 
   @Column({ default: 'active' })
   status: string;
@@ -26,11 +28,17 @@ export class ReservedBike {
     onDelete: 'CASCADE',
   })
   @JoinColumn()
-  userId: User;
+  user: User;
 
   @ManyToOne((type) => Bike, (bike) => bike.reservations, {
     onDelete: 'CASCADE',
   })
   @JoinColumn()
-  bikeId: Bike;
+  bike: Bike;
+
+  @OneToMany((type) => Comment, (comment) => comment.reservation, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn()
+  comments: Comment[];
 }

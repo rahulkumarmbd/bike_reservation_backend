@@ -1,3 +1,4 @@
+import { Comment } from 'src/comments/comment.entity';
 import { ReservedBike } from 'src/reservedBikes/reservedBikes.entity';
 import { Role } from 'src/userroles';
 import {
@@ -21,7 +22,7 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column()
+  @Column({ select: false })
   password: string;
 
   @Column({ unique: true })
@@ -34,8 +35,13 @@ export class User {
   // @JoinTable()
   // reservedBikesIds: string[];
 
-  @OneToMany((type) => ReservedBike, (reservedbike) => reservedbike.userId, {
+  @OneToMany((type) => ReservedBike, (reservedbike) => reservedbike.user, {
     onDelete: 'CASCADE',
   })
   reservedBikesIds: ReservedBike[];
+
+  @OneToMany((type) => Comment, (comment) => comment.user, {
+    onDelete: 'CASCADE',
+  })
+  comments: Comment[];
 }

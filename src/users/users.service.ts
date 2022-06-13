@@ -10,7 +10,6 @@ env.config();
 
 // console.log(process.env.JWT_PRIVATE_KEY)
 
-
 export interface responseUser {
   id?: number;
   fullName: string;
@@ -22,7 +21,12 @@ export interface responseUser {
 export interface tokenObject {
   message: string;
   token: string;
-  user: responseUser
+  user: responseUser;
+}
+
+export interface usersPaginate {
+  users: responseUser[];
+  pages: number;
 }
 
 @Injectable()
@@ -31,11 +35,16 @@ export class UserService {
     @InjectRepository(User) private usersRepository: Repository<User>,
   ) {}
 
-  async getAll(): Promise<responseUser[]> {
-    return await this.usersRepository
-      .createQueryBuilder()
-      .select(['fullName', 'email', 'roles', 'phoneNumber', 'id'])
-      .execute();
+  async getAll(page: number, limit: number): Promise<usersPaginate> {
+    const users = await this.usersRepository.find({
+      take: limit,
+      skip: (page - 1) * limit,
+      order: { id: 'DESC' },
+    });
+
+    const count = await this.usersRepository.count();
+
+    return { users: users, pages: Math.ceil(count / limit) };
   }
 
   getHello(): string {
@@ -48,16 +57,15 @@ export class UserService {
       ...user,
       password: hashPassword,
     });
-    const { password, ...createdUser } = await this.usersRepository.save(
-      newUser,
-    );
-    return createdUser;
+    return await this.usersRepository.save(newUser);
   }
 
   async loggedUser(user: User): Promise<tokenObject> {
-    const existingUser = await this.usersRepository.findOne({
-      email: user.email,
-    });
+    const existingUser = await this.usersRepository
+      .createQueryBuilder('user')
+      .where('user.email = :email', { email: user.email })
+      .addSelect('user.password')
+      .getOne();
 
     if (!existingUser) {
       throw new HttpException('User not found', HttpStatus.BAD_REQUEST);
@@ -75,17 +83,14 @@ export class UserService {
       process.env.JWT_PRIVATE_KEY,
     );
 
-    const {password , ...rest} = existingUser;
-
-    return { message: 'login successful', token ,user: rest};;
+    return { message: 'login successful', token, user: existingUser };
   }
 
   async getOneById(id: number): Promise<responseUser> {
     const user = await this.usersRepository.findOne(id);
     if (!user)
       throw new HttpException('Invalid User ID', HttpStatus.BAD_REQUEST);
-    const { password, ...rest } = user;
-    return rest;
+    return user;
   }
 
   async updateUser(user: User, id: number): Promise<responseUser> {
@@ -98,15 +103,13 @@ export class UserService {
       user = { ...user, password: hashPassword };
     }
     const updateUser = { ...oldUser, ...user };
-    const { password, ...rest } = await this.usersRepository.save(updateUser);
-    return rest;
+    return await this.usersRepository.save(updateUser);
   }
 
   async deleteUser(id: number): Promise<responseUser> {
     const user = await this.usersRepository.findOne(id);
     if (!user)
       throw new HttpException('Invalid User ID', HttpStatus.BAD_REQUEST);
-    const { password, ...rest } = await this.usersRepository.remove(user);
-    return rest;
+    return await this.usersRepository.remove(user);
   }
 }

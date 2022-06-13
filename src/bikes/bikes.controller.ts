@@ -17,7 +17,17 @@ import { bikePatchSchema, bikeSchema } from './bike.schema';
 import { RoleGuard } from 'src/AuthGuard/RoleGuard';
 import { AuthGuard } from 'src/AuthGuard/AuthGuard';
 import { Role } from 'src/userroles';
-import { query } from 'express';
+
+export interface NonReserved {
+  page: number;
+  limit: number;
+  bookingDate: Date;
+  returnDate: Date;
+  model?: string;
+  color?: string;
+  avgRating?: string;
+  location?: string;
+}
 
 @Controller('bikes')
 export class BikeController {
@@ -26,18 +36,30 @@ export class BikeController {
   @RoleGuard(Role.Manager)
   @UseGuards(AuthGuard)
   @Get()
-  reservedBikes(): Promise<Bike[]> {
-    return this.bikeService.allBikes();
+  reservedBikes(
+    @Query() { page, limit }: { page: string; limit: string },
+  ): Promise<BikePaginate> {
+    return this.bikeService.allBikes(+page, +limit);
   }
 
   @RoleGuard(Role.Manager, Role.Regular)
   @UseGuards(AuthGuard)
-  @Get("filter")
+  @Get('filter')
   filter(
     @Query()
     query: filterBike,
   ): Promise<BikePaginate> {
     return this.bikeService.filter(query);
+  }
+
+  @RoleGuard(Role.Regular, Role.Manager)
+  @UseGuards(AuthGuard)
+  @Get('nonreserved')
+  nonreserved(
+    @Query()
+    query: NonReserved,
+  ): Promise<BikePaginate> {
+    return this.bikeService.nonreserved(query);
   }
 
   @RoleGuard(Role.Regular)
@@ -49,11 +71,18 @@ export class BikeController {
     return this.bikeService.available(+page, +limit);
   }
 
-  @RoleGuard(Role.Regular, Role.Manager)
+  @RoleGuard(Role.Regular)
   @UseGuards(AuthGuard)
   @Get('/:id')
-  bike(@Param('id') id: number): Promise<Bike> {
+  AvialableBike(@Param('id') id: number): Promise<Bike> {
     return this.bikeService.bike(id);
+  }
+
+  @RoleGuard(Role.Manager)
+  @UseGuards(AuthGuard)
+  @Get('/:id/manager')
+  getBike(@Param('id') id: number): Promise<Bike> {
+    return this.bikeService.getOneById(id);
   }
 
   @RoleGuard(Role.Manager)

@@ -4,12 +4,13 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import config from '../ormConfig';
 import { BikeModule } from './bikes/bikes.module';
-import { ReservedBikeModule } from './reservedBikes/reservedbike.module';
+import { CommentModule } from './comments/comment.module';
+// import { UserModule } from './users/users.module';
 
 @Module({
   imports: [
     BikeModule,
-    ReservedBikeModule,
+    CommentModule,
     TypeOrmModule.forRoot(config),
   ],
   controllers: [AppController],

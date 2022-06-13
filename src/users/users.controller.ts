@@ -8,16 +8,12 @@ import {
   Delete,
   UsePipes,
   UseGuards,
+  Query,
 } from '@nestjs/common';
-import { responseUser, UserService } from './users.service';
+import { responseUser, UserService, usersPaginate } from './users.service';
 import { User } from './user.entity';
 import { JoiValidationPipe } from 'src/joi-validation.pipes';
-import {
-  userJwtToken,
-  userLoginSchema,
-  userPatchSchema,
-  userSchema,
-} from './user.schema';
+import { userLoginSchema, userPatchSchema, userSchema } from './user.schema';
 import { AuthGuard } from 'src/AuthGuard/AuthGuard';
 import { Auth, IAuth } from 'src/utils/auth.decorator';
 import { RoleGuard } from 'src/AuthGuard/RoleGuard';
@@ -39,8 +35,10 @@ export class UserController {
   @RoleGuard(Role.Manager)
   @UseGuards(AuthGuard)
   @Get()
-  getAll() {
-    return this.userService.getAll();
+  getAll(
+    @Query() { page, limit }: { page: string; limit: string },
+  ): Promise<usersPaginate> {
+    return this.userService.getAll(+page, +limit);
   }
 
   @RoleGuard(Role.Regular)

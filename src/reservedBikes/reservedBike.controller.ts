@@ -77,7 +77,7 @@ export class ReservedBikeController {
   @Get('bike/:id')
   @UsePipes(new JoiValidationPipe(idAndPaginationSchema))
   async getBikeReserved(
-    @Param('id') id: number,
+    @Param() { id }: { id: number },
     @Query() { page, limit }: { page: string; limit: string },
   ): Promise<responseReservedBikes> {
     if (!id || !page || !limit) {

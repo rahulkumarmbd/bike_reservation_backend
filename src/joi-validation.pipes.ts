@@ -11,7 +11,6 @@ export class JoiValidationPipe implements PipeTransform {
   constructor(private schema: ObjectSchema) {}
 
   transform(value: any, metadata: ArgumentMetadata) {
-    console.log(value);
     if (value?.user) {
       return value;
     }

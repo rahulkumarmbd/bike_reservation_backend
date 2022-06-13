@@ -29,14 +29,6 @@ export class ReservedBikeService {
     return await this.reservedBikeRepository.save(reservedBike);
   }
 
-  async getReservedBike(): Promise<ReservedBike[]> {
-    const allReservations = await this.reservedBikeRepository.find({
-      relations: ['user', 'bike'],
-    });
-
-    return allReservations;
-  }
-
   async getReservedBikesOfGivenTimePeriod(
     bookingDate: Date,
     returnDate: Date,

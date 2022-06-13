@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BikeService } from 'src/bikes/bikes.service';
 import { ReservedBikeService } from 'src/reservedBikes/reservedBike.service';
@@ -30,10 +30,18 @@ export class commentService {
 
     const bike = await this.bikeRepository.getOneById(id);
 
+    if (!bike) {
+      throw new HttpException('Bike not found', HttpStatus.BAD_REQUEST);
+    }
+
     const Reservation = await this.reservedBikeRepository.getReservationId(
       +reservation,
       auth,
     );
+
+    if (!Reservation) {
+      throw new HttpException('Reservation not found', HttpStatus.BAD_REQUEST);
+    }
 
     const Review = this.commentRepository.create({
       ...rest,
@@ -41,6 +49,10 @@ export class commentService {
       bike: bike,
       reservation: Reservation,
     });
+
+    if (!Review) {
+      throw new HttpException('something went wrong', HttpStatus.BAD_REQUEST);
+    }
 
     const savedReview = await this.commentRepository.save(Review);
 
@@ -53,6 +65,9 @@ export class commentService {
     limit: number,
     isAdded?: boolean,
   ): Promise<ResponseComments> {
+    if(!id || !page || !limit){
+      throw new HttpException('something went wrong', HttpStatus.BAD_REQUEST);
+    }
     const bike = await this.bikeRepository.getOneById(id);
     if (isAdded) {
       const allReviews = await this.commentRepository.find({

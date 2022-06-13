@@ -71,3 +71,16 @@ export const userJwtToken = joi.object({
     .error(new Error('Token is required. Please provide a valid token'))
     .required(),
 });
+
+export const paginationSchema = joi.object({
+  limit: joi.string().empty().error(new Error('Limit is required')).required(),
+  page: joi
+    .string()
+    .empty()
+    .error(new Error('page parameter is required'))
+    .required(),
+});
+
+export const userIdSchema = joi.object({
+  id: joi.number().error(new Error('Id is required')).required(),
+});

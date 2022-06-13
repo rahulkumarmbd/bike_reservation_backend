@@ -34,7 +34,7 @@ export class AuthGuard implements CanActivate {
         }
       },
     );
-
+      console.log(data);
     if (!data) {
       throw new UnauthorizedException();
     }
@@ -49,7 +49,9 @@ export class AuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    
+
+    // console.log(requiredRoles && requiredRoles.includes(user.roles));
+
     return requiredRoles && requiredRoles.includes(user.roles);
   }
 }

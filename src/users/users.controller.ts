@@ -13,7 +13,13 @@ import {
 import { responseUser, UserService, usersPaginate } from './users.service';
 import { User } from './user.entity';
 import { JoiValidationPipe } from 'src/joi-validation.pipes';
-import { userLoginSchema, userPatchSchema, userSchema } from './user.schema';
+import {
+  paginationSchema,
+  userIdSchema,
+  userLoginSchema,
+  userPatchSchema,
+  userSchema,
+} from './user.schema';
 import { AuthGuard } from 'src/AuthGuard/AuthGuard';
 import { RoleGuard } from 'src/AuthGuard/RoleGuard';
 import { Role } from 'src/userroles';
@@ -34,6 +40,7 @@ export class UserController {
   @RoleGuard(Role.Manager)
   @UseGuards(AuthGuard)
   @Get()
+  @UsePipes(new JoiValidationPipe(paginationSchema))
   getAll(
     @Query() { page, limit }: { page: string; limit: string },
   ): Promise<usersPaginate> {
@@ -56,6 +63,7 @@ export class UserController {
   @RoleGuard(Role.Manager)
   @UseGuards(AuthGuard)
   @Get('/:id')
+  @UsePipes(new JoiValidationPipe(userIdSchema))
   async getOneById(@Param() id: number): Promise<responseUser> {
     return await this.userService.getOneById(id);
   }
@@ -74,7 +82,9 @@ export class UserController {
   @RoleGuard(Role.Manager)
   @UseGuards(AuthGuard)
   @Delete('/:id')
+  @UsePipes(new JoiValidationPipe(userIdSchema))
   async deleteUser(@Param() id: number): Promise<responseUser> {
+    console.log('hello')
     return await this.userService.deleteUser(id);
   }
 }

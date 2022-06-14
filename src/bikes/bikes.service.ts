@@ -172,7 +172,6 @@ export class BikeService {
   async deleteBike(id: number): Promise<Bike> {
     console.log("bike",id);
     const bike = await this.getBikeById(id);
-    console.log(bike);
     if (!bike)
       throw new HttpException('Invalid Bike ID', HttpStatus.BAD_REQUEST);
     

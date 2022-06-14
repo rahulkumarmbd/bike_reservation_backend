@@ -94,6 +94,13 @@ export class UserService {
     if (!oldUser)
       throw new HttpException('Invalid User ID', HttpStatus.BAD_REQUEST);
 
+    if (user.email && user.email !== oldUser.email) {
+      const haveUser = await this.usersRepository.findOne(user.email);
+      if (haveUser) {
+        throw new HttpException('Email is not unique', HttpStatus.BAD_REQUEST);
+      }
+    }
+
     if (user.password) {
       const hashPassword = bcrypt.hashSync(user.password, 8);
       user = { ...user, password: hashPassword };

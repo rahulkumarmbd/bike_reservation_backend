@@ -28,6 +28,23 @@ export class ReservedBikeService {
     if (!existingBike) {
       throw new HttpException('Invalid Bike ID', HttpStatus.BAD_REQUEST);
     }
+
+    if (!existingBike.available) {
+      throw new HttpException('Bike is not available', HttpStatus.BAD_REQUEST);
+    }
+
+    const ids = await this.getReservedBikesOfGivenTimePeriod(
+      bike.bookingDate,
+      bike.returnDate,
+    );
+
+    if (ids.includes(bike.bikeId)) {
+      throw new HttpException(
+        'Bike is not available for reservation',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     const reservedBike = this.reservedBikeRepository.create({
       ...bike,
       bike: existingBike,
@@ -174,7 +191,10 @@ export class ReservedBikeService {
       throw new HttpException('Invalid Reservation ID', HttpStatus.BAD_REQUEST);
 
     if (reservation.status !== 'active') {
-      throw new HttpException('It is not active', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'You are trying to cancel a reservation which is already canceled',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     if (reservation.user.id !== auth.user.id) {
@@ -213,6 +233,12 @@ export class ReservedBikeService {
     );
     if (!reservation)
       throw new HttpException('Invalid Reservation ID', HttpStatus.BAD_REQUEST);
+
+    if (reservation.comment)
+      throw new HttpException(
+        'this reservation already have a review',
+        HttpStatus.BAD_REQUEST,
+      );
 
     return this.reservedBikeRepository.save({
       ...reservation,

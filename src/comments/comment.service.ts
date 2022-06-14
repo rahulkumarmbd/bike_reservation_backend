@@ -46,6 +46,14 @@ export class commentService {
       throw new HttpException('Reservation not found', HttpStatus.BAD_REQUEST);
     }
 
+    if(auth.user.id !== Reservation.user.id){
+      throw new HttpException('You are not allowed to cancel other users reservation', HttpStatus.BAD_REQUEST);
+    }
+
+    if(Reservation.status !== "active"){
+      throw new HttpException('this is not a active reservation', HttpStatus.BAD_REQUEST);
+    }
+
     const Review = this.commentRepository.create({
       ...rest,
       user: auth.user,

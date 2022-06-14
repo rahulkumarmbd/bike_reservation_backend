@@ -6,7 +6,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -36,9 +36,9 @@ export class ReservedBike {
   @JoinColumn()
   bike: Bike;
 
-  @OneToMany((type) => Comment, (comment) => comment.reservation, {
+  @OneToOne((type) => Comment, (comment) => comment.reservation, {
     onDelete: 'CASCADE',
   })
   @JoinColumn()
-  comments: Comment[];
+  comment: Comment;
 }

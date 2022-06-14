@@ -26,9 +26,12 @@ export class commentService {
     page: number,
     limit: number,
   ): Promise<ResponseComments> {
+    if (!id || !page || !limit || page < 1 || limit < 1) {
+      throw new HttpException('Please check your query parameters', HttpStatus.BAD_REQUEST);
+    }
     const { reservation, ...rest } = review;
 
-    const bike = await this.bikeRepository.getOneById(id);
+    const bike = await this.bikeRepository.getBikeById(id);
 
     if (!bike) {
       throw new HttpException('Bike not found', HttpStatus.BAD_REQUEST);
@@ -51,10 +54,15 @@ export class commentService {
     });
 
     if (!Review) {
-      throw new HttpException('something went wrong', HttpStatus.BAD_REQUEST);
+      throw new HttpException('Review not create due to some reason', HttpStatus.BAD_REQUEST);
     }
 
     const savedReview = await this.commentRepository.save(Review);
+
+    const updatedReservation = await this.reservedBikeRepository.AddCommentId(
+      reservation,
+      savedReview,
+    );
 
     return await this.getReviews(id, page, limit, true);
   }
@@ -65,10 +73,11 @@ export class commentService {
     limit: number,
     isAdded?: boolean,
   ): Promise<ResponseComments> {
-    if(!id || !page || !limit){
-      throw new HttpException('something went wrong', HttpStatus.BAD_REQUEST);
+    if (!id || !page || !limit || page < 1 || limit < 1) {
+      throw new HttpException('check your query parameters', HttpStatus.BAD_REQUEST);
     }
-    const bike = await this.bikeRepository.getOneById(id);
+    const bike = await this.bikeRepository.getBikeById(id);
+
     if (isAdded) {
       const allReviews = await this.commentRepository.find({
         where: { bike: bike },
@@ -77,8 +86,9 @@ export class commentService {
         const updateBike = await this.bikeRepository.updateBike(
           {
             ...bike,
-            avgRating:
+            avgRating: Math.round(
               allReviews.reduce((a, b) => a + b.rating, 0) / allReviews.length,
+            ),
           },
           id,
         );

@@ -107,4 +107,8 @@ export class ReservedBikeController {
   ): Promise<ReservedBike> {
     return await this.reservedBikeService.getReservationId(id, auth);
   }
+
+  async AddCommentId(reservationId: any, review: any) {
+    return await this.reservedBikeService.AddCommentId(reservationId, review);
+  }
 }

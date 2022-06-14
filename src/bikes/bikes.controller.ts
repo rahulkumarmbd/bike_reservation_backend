@@ -95,7 +95,7 @@ export class BikeController {
   @Get('/:id/manager')
   @UsePipes(new JoiValidationPipe(idSchema))
   getBike(@Param() { id }: { id: number }): Promise<Bike> {
-    return this.bikeService.getOneById(id);
+    return this.bikeService.getBikeById(id);
   }
 
   @RoleGuard(Role.Manager)
@@ -110,7 +110,7 @@ export class BikeController {
   @UseGuards(AuthGuard)
   @Patch('/:id')
   @UsePipes(new JoiValidationPipe(bikePatchSchema))
-  async updateUser(@Body() bike: Bike, @Param() id: number): Promise<Bike> {
+  async updateUser(@Body() bike: Bike, @Param() {id}: {id:number}): Promise<Bike> {
     return this.bikeService.updateBike(bike, id);
   }
 
@@ -118,7 +118,7 @@ export class BikeController {
   @UseGuards(AuthGuard)
   @Delete('/:id')
   @UsePipes(new JoiValidationPipe(idSchema))
-  async deleteUser(@Param() id: number): Promise<Bike> {
+  async deleteUser(@Param() { id }: { id: number }): Promise<Bike> {
     return this.bikeService.deleteBike(id);
   }
 }

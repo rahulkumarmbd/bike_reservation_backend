@@ -57,11 +57,13 @@ export const nonReservedSchema = joi.object({
   bookingDate: joi
     .date()
     .empty()
+    .min(new Date().toISOString())
     .error(new Error('bookingDate is required'))
     .required(),
   returnDate: joi
     .date()
     .empty()
+    .min(new Date().toISOString())
     .error(new Error('returnDate is required'))
     .required(),
   model: joi.string().allow('').error(new Error('model is invalid')),

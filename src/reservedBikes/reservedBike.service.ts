@@ -1,6 +1,7 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Bike } from 'src/bikes/bike.entity';
+import { BikeService } from 'src/bikes/bikes.service';
 import { User } from 'src/users/user.entity';
 import { IAuth } from 'src/utils/auth.decorator';
 import { Between, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
@@ -16,15 +17,29 @@ export class ReservedBikeService {
   constructor(
     @InjectRepository(ReservedBike)
     private reservedBikeRepository: Repository<ReservedBike>,
-    @InjectRepository(User) private userRepository: Repository<User>,
+    @InjectRepository(Bike)
+    private bikeRepo: Repository<Bike>,
+    @InjectRepository(User)
+    private userRepo: Repository<User>,
   ) {}
 
   async reserveBike(bike, auth: IAuth): Promise<ReservedBike> {
+    const existingBike = await this.bikeRepo.findOne(bike.bikeId);
+    if (!existingBike) {
+      throw new HttpException('Invalid Bike ID', HttpStatus.BAD_REQUEST);
+    }
     const reservedBike = this.reservedBikeRepository.create({
       ...bike,
-      bike: bike.bikeId,
+      bike: existingBike,
       user: auth.user,
     });
+
+    if (!reservedBike) {
+      throw new HttpException(
+        'reserved bike not created due to error',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
     return await this.reservedBikeRepository.save(reservedBike);
   }
@@ -33,6 +48,12 @@ export class ReservedBikeService {
     bookingDate: Date,
     returnDate: Date,
   ): Promise<Bike[]> {
+    if (bookingDate > returnDate) {
+      throw new HttpException(
+        'Please check your booking date and return date again',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     const newbookingDate = `${bookingDate} 00:00:00.000`;
     const newreturnDate = `${returnDate} 00:00:00.000`;
     let ids = await this.reservedBikeRepository.find({
@@ -62,8 +83,15 @@ export class ReservedBikeService {
     page: number,
     limit: number,
   ): Promise<responseReservedBikes> {
+    if (!page || page < 1 || !limit || limit < 1) {
+      throw new HttpException(
+        'Please check query parameters',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     const allReservations = await this.reservedBikeRepository.find({
-      relations: ['user', 'bike'],
+      relations: ['user', 'bike', 'comment'],
       where: { user: Auth.user.id },
       order: { id: 'DESC' },
       take: limit,
@@ -82,8 +110,21 @@ export class ReservedBikeService {
     page: number,
     limit: number,
   ): Promise<responseReservedBikes> {
+    if (!page || page < 1 || !limit || !id || limit < 1) {
+      throw new HttpException(
+        'Please check query parameters',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const user = await this.userRepo.findOne(id);
+
+    if (!user) {
+      throw new HttpException('Invalid user ID', HttpStatus.BAD_REQUEST);
+    }
+
     const allReservations = await this.reservedBikeRepository.find({
-      relations: ['user', 'bike'],
+      relations: ['user', 'bike', 'comment'],
       where: { user: id },
       order: { id: 'DESC' },
       take: limit,
@@ -102,8 +143,14 @@ export class ReservedBikeService {
     page: number,
     limit: number,
   ): Promise<responseReservedBikes> {
+    const existingBike = await this.bikeRepo.findOne(id);
+
+    if (!existingBike) {
+      throw new HttpException('Invalid Bike ID', HttpStatus.BAD_REQUEST);
+    }
+
     const allReservations = await this.reservedBikeRepository.find({
-      relations: ['user', 'bike'],
+      relations: ['user', 'bike', 'comment'],
       where: { bike: id },
       order: { id: 'DESC' },
       take: limit,
@@ -119,16 +166,16 @@ export class ReservedBikeService {
 
   async cancelReservation(id: number, auth: IAuth): Promise<ReservedBike> {
     const reservation = await this.reservedBikeRepository.findOne({
-      relations: ['user'],
+      relations: ['user', 'comment'],
       where: { id },
     });
+
+    if (!reservation)
+      throw new HttpException('Invalid Reservation ID', HttpStatus.BAD_REQUEST);
 
     if (reservation.status !== 'active') {
       throw new HttpException('It is not active', HttpStatus.BAD_REQUEST);
     }
-
-    if (!reservation)
-      throw new HttpException('Invalid Reservation ID', HttpStatus.BAD_REQUEST);
 
     if (reservation.user.id !== auth.user.id) {
       throw new HttpException('UnauthorizedException', HttpStatus.UNAUTHORIZED);
@@ -142,7 +189,7 @@ export class ReservedBikeService {
 
   async getReservationId(id: number, auth: IAuth): Promise<ReservedBike> {
     const reservation = await this.reservedBikeRepository.findOne({
-      relations: ['bike', 'user'],
+      relations: ['bike', 'user', 'comment'],
       where: { id, status: 'active' },
     });
 
@@ -158,5 +205,18 @@ export class ReservedBikeService {
     }
 
     return reservation;
+  }
+
+  async AddCommentId(reservationId: any, review: any) {
+    const reservation = await this.reservedBikeRepository.findOne(
+      reservationId,
+    );
+    if (!reservation)
+      throw new HttpException('Invalid Reservation ID', HttpStatus.BAD_REQUEST);
+
+    return this.reservedBikeRepository.save({
+      ...reservation,
+      comment: review,
+    });
   }
 }
